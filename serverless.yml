@@ -1,27 +1,24 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
 
 service: serverless-perhap
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
 
 provider:
   name: aws
   runtime: python2.7
   stage: dev
   region: us-west-2
+  environment:
+    PerhapEvents: Perhap-Events
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.PerhapEvents}"
+
 
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
@@ -60,11 +57,11 @@ functions:
           path: hello
           method: get
   new-event:
-    handler: handler.new-event
+    handler: handler.new_event
     events:
       - http:
           method: post
-          path: new-event/{realm}/{domain}/{entity}/{event-type}
+          path: events/{realm}/{domain}/{entity}/{event-type}
 
 
 #    The following are a few example events you can configure
@@ -96,48 +93,46 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
-  resources:
-    Resources:
-      DynamoDBTable:
-        Type: AWS::DynamoDB::Table
-        Properties:
-          AttributeDefinitions:
-            -
-              AttributeName: "Realm"
-              AttributeType: "S"
-            -
-              AttributeName: "Domain"
-              AttributeType: "S"
-            -
-              AttributeName: "Entity"
-              AttributeType: "S"
-            -
-              AttributeName: "EventType"
-              AttributeType: "S"
-            -
-              AttributeName: "EventId"
-              AttributeType: "S"
-            -
-              AttributeName: "RangeId"
-              AttributeType: "S"
-            -
-              AttributeName: "EventData"
-              AttributeType: "M"
-          GlobalSecondaryIndexes:
-            - GlobalSecondaryIndexes
-          KeySchema:
-            -
-              AttributeName: "Realm"
-              KeyType: "HASH"
-            -
-              AttributeName: "RangeId"
-              KeyType: "RANGE"
-          LocalSecondaryIndexes:
-            - LocalSecondaryIndexes
-          ProvisionedThroughput:
-            ReadCapacityUnits: "1"
-            WriteCapacityUnits: "1"
-          TableName: Perhap-Serverless
+resources:
+  Resources:
+    DynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "Realm"
+            AttributeType: "S"
+          # -
+          #   AttributeName: "Domain"
+          #   AttributeType: "S"
+          # -
+          #   AttributeName: "Entity"
+          #   AttributeType: "S"
+          # -
+          #   AttributeName: "EventType"
+          #   AttributeType: "S"
+          # -
+          #   AttributeName: "EventId"
+          #   AttributeType: "S"
+          -
+            AttributeName: "RangeId"
+            AttributeType: "S"
+          # -
+          #   AttributeName: "EventData"
+          #   AttributeType: "M"
+        KeySchema:
+          -
+            AttributeName: "Realm"
+            KeyType: "HASH"
+          -
+            AttributeName: "RangeId"
+            KeyType: "RANGE"
+        ProvisionedThroughput:
+          ReadCapacityUnits: "10"
+          WriteCapacityUnits: "50"
+        TableName: ${self:provider.environment.PerhapEvents}
+
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"

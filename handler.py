@@ -1,10 +1,32 @@
 import json
 import boto3
 
-def hello(event, context):
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('Perhap-Events')
+
+def new_event(event, context):
+    event_data = event['body']
+    event_id = json.loads(event['body'])['event-id']
+    domain = event['pathParameters']['domain']
+    realm = event['pathParameters']['realm']
+    entity = event['pathParameters']['entity']
+    event_type = event['pathParameters']['event-type']
+    range_id = domain + '|' + entity + '|' + event_id
+
+    add_event = table.put_item(
+        Item={
+            'Realm': realm,
+            'Domain': domain,
+            'Entity': entity,
+            'EventType': event_type,
+            'EventId': event_id,
+            'EventData': event_data,
+            'RangeId': range_id
+        }
+    )
+
     body = {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
-        "input": event
+        "inputBody": add_event,
     }
 
     response = {
@@ -13,20 +35,3 @@ def hello(event, context):
     }
 
     return response
-
-    # Use this code if you don't use the http event with the LAMBDA-PROXY integration
-    """
-    return {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
-        "event": event
-    }
-    """
-#
-# def my_handler(event, context):
-# message = 'Hello {} {}!'.format(event['first_name'],
-#                                 event['last_name'])
-# return {
-#     'message' : 'hello world'
-# }
-#
-# def new-event(event, context):
