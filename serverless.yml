@@ -21,13 +21,13 @@ provider:
 
 functions:
   get-domain:
-    handler: get-handler.domain
+    handler: two-parts-handler.domain
     events:
       - http:
           method: get
           path: events/{realm}/{domain}
   get-events:
-    handler: get-handler.get_events
+    handler: three-parts-handler.get_events
     events:
       - http:
           method: get
