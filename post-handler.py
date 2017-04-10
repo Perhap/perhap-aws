@@ -5,7 +5,7 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('Perhap-Events')
 
 def new_event(event, context):
-    event_data = event['body']
+    event_data = json.loads(event['body'])
     event_id = json.loads(event['body'])['event-id']
     domain = event['pathParameters']['domain']
     realm = event['pathParameters']['realm']

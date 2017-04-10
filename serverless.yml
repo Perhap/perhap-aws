@@ -27,7 +27,7 @@ functions:
           method: get
           path: events/{realm}/{domain}
   get-events:
-    handler: get-handler.get_event
+    handler: get-handler.get_events
     events:
       - http:
           method: get

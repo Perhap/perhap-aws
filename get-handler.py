@@ -9,13 +9,13 @@ def version1(id):
     return id[14] == '1'
 
 def get_events(event, context):
-    if version1(event['pathParameters']['id']):
-        get_event(event, context)
+    v1 = version1(event['pathParameters']['entity'])
+    if v1:
+        return get_event(event, context)
     else:
-        get_entity(event, context)
+        return get_entity(event, context)
 
 def get_event(event, context):
-    print(event)
     domain = event['pathParameters']['domain']
     realm = event['pathParameters']['realm']
     event_id = event['pathParameters']['entity']
@@ -32,19 +32,38 @@ def get_event(event, context):
     }
 
     return response
-#
-# def get-domain(event, context):
-#
-#     result = table.query(
-#         Key={
-#             'Realm': event['pathParameters']['realm'],
-#             'Domain': event['pathParameters']['realm']
-#         }
-#     )
-#
-#     response = {
-#         "statusCode": 200,
-#         "body": json.dumps(result[Items])
-#     }
-#
-#     return response
+
+def get_entity(event, context):
+    domain = event['pathParameters']['domain']
+    realm = event['pathParameters']['realm']
+    entity = event['pathParameters']['entity']
+
+    sort_key= domain + "|" + entity
+
+    result = table.query(
+        ExpressionAttributeValues={":sort_key": sort_key, ":realm": realm},
+        KeyConditionExpression='Realm = :realm and begins_with(RangeId, :sort_key)'
+    )
+
+    response = {
+        "statusCode": 200,
+        "body": json.dumps(result['Items'])
+    }
+
+    return response
+
+def domain(event, context):
+    domain = event['pathParameters']['domain']
+    realm = event['pathParameters']['realm']
+
+    result = table.query(
+        ExpressionAttributeValues={":domain": domain, ":realm": realm},
+        KeyConditionExpression='Realm = :realm and begins_with(RangeId, :domain)'
+    )
+
+    response = {
+        "statusCode": 200,
+        "body": json.dumps(result['Items'])
+    }
+
+    return response
