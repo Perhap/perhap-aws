@@ -25,13 +25,8 @@ def new_event(event, context):
         }
     )
 
-    body = {
-        "inputBody": add_event,
-    }
-
     response = {
-        "statusCode": 200,
-        "body": json.dumps(body)
+        "statusCode": add_event["ResponseMetadata"]["HTTPStatusCode"]
     }
 
     return response
