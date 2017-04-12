@@ -3,8 +3,8 @@ import boto3
 
 dynamodb = boto3.resource('dynamodb')
 events = dynamodb.Table('Perhap-Events')
-domains = dynamodb.Table('Perhap-Domains')
-entities = dynamodb.Table('Perhap-Entities')
+# domains = dynamodb.Table('Perhap-Domains')
+# entities = dynamodb.Table('Perhap-Entities')
 
 def time_order_uuid(id):
     time_low,time_mid,time_hi_and_version,clock_seq_hi_and_reserved,clock_seq_low = id.split("-")
@@ -31,8 +31,8 @@ def new_event(event, context):
     }
 
     add_event = events.put_item(Item = item)
-    add_domain = domains.put_item(Item = {'Realm': realm, 'Domain': domain})
-    add_entity = entities.put_item(Item = {'Domain': domain, 'Entity': entity})
+    # add_domain = domains.put_item(Item = {'Realm': realm, 'Domain': domain})
+    # add_entity = entities.put_item(Item = {'Domain': domain, 'Entity': entity})
 
     # kinesis.put_record("Perhap-Kinesis", json.dumps(user), "partitionkey")
 
