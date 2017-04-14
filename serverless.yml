@@ -4,10 +4,11 @@ service: serverless-perhap
 provider:
   name: aws
   runtime: python2.7
-  stage: dev
   region: us-west-2
   environment:
     PerhapEvents: Perhap-Events
+    PerhapDomains: Perhap-Domains
+    PerhapEntities: Perhap-Entities
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -17,7 +18,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/Perhap-Events", "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/Perhap-Events/*"]
+      Resource: ["arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/Perhap-Events", "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/Perhap-Events/*", "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/Perhap-Domains", "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/Perhap-Entities"]
 
 functions:
   get-domain:
@@ -26,6 +27,12 @@ functions:
       - http:
           method: get
           path: events/{realm}/{domain}
+  put-bulk:
+    handler: post-handler.bulk_post
+    events:
+      - http:
+          method: post
+          path: events/{realm}/bulk
   get-events:
     handler: three-parts-handler.get_events
     events:
@@ -37,7 +44,7 @@ functions:
     events:
       - http:
           method: post
-          path: events/{realm}/{domain}/{entity}/{event-type}
+          path: events/{realm}/{domain}/{entity}/{event-type}/{event-id}
 
 
 resources:
@@ -52,21 +59,9 @@ resources:
           -
             AttributeName: "RangeId"
             AttributeType: "S"
-          # -
-          #   AttributeName: "Domain"
-          #   AttributeType: "S"
-          # -
-          #   AttributeName: "Entity"
-          #   AttributeType: "S"
-          # -
-          #   AttributeName: "EventType"
-          #   AttributeType: "S"
           -
             AttributeName: "EventId"
             AttributeType: "S"
-          # -
-          #   AttributeName: "EventData"
-          #   AttributeType: "M"
         KeySchema:
           -
             AttributeName: "Realm"
@@ -89,8 +84,49 @@ resources:
               KeyType: "RANGE"
           Projection:
             ProjectionType: ALL
-
         TableName: ${self:provider.environment.PerhapEvents}
+    DomainDynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "Realm"
+            AttributeType: "S"
+          -
+            AttributeName: "PerhapDomain"
+            AttributeType: "S"
+        KeySchema:
+          -
+            AttributeName: "Realm"
+            KeyType: "HASH"
+          -
+            AttributeName: "PerhapDomain"
+            KeyType: "RANGE"
+        ProvisionedThroughput:
+          ReadCapacityUnits: "10"
+          WriteCapacityUnits: "50"
+        TableName: ${self:provider.environment.PerhapDomains}
+    EntityDynamoDBTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "PerhapDomain"
+            AttributeType: "S"
+          -
+            AttributeName: "Entity"
+            AttributeType: "S"
+        KeySchema:
+          -
+            AttributeName: "PerhapDomain"
+            KeyType: "HASH"
+          -
+            AttributeName: "Entity"
+            KeyType: "RANGE"
+        ProvisionedThroughput:
+          ReadCapacityUnits: "10"
+          WriteCapacityUnits: "50"
+        TableName: ${self:provider.environment.PerhapEntities}
     # Kinesis:
     #   Type: "AWS::Kinesis::Stream"
     #   Properties:

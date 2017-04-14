@@ -3,6 +3,8 @@ import boto3
 
 dynamodb = boto3.resource('dynamodb')
 events = dynamodb.Table('Perhap-Events')
+domains = dynamodb.Table('Perhap-Domains')
+
 
 def time_order_uuid(id):
     time_low,time_mid,time_hi_and_version,clock_seq_hi_and_reserved,clock_seq_low = id.split("-")
@@ -20,7 +22,21 @@ def domain(event, context):
         return get_domain(event, context)
 
 def get_keys(event, context):
-    print('keys')
+    realm = event['pathParameters']['realm']
+    result = domains.query(
+        ExpressionAttributeValues={":realm": realm},
+        KeyConditionExpression='Realm = :realm',
+        ProjectionExpression='PerhapDomain'
+    )
+
+    list_of_values = [d['PerhapDomain'] for d in result['Items']]
+
+    response = {
+        "statusCode": 200,
+        "body": json.dumps({"keys": list_of_values})
+    }
+
+    return response
 
 def get_domain(event, context):
     domain = event['pathParameters']['domain']
