@@ -35,7 +35,7 @@ def get_keys(event, context):
     list_of_values = [d['Entity'] for d in result['Items']]
 
     response = {
-        "statusCode": 200,
+        "statusCode": result["ResponseMetadata"]["HTTPStatusCode"],
         "body": json.dumps({"keys": list_of_values})
     }
 
@@ -43,33 +43,28 @@ def get_keys(event, context):
 
 
 def get_event(event, context):
-    domain = event['pathParameters']['domain']
-    realm = event['pathParameters']['realm']
+    entity = event['pathParameters']['domain']
     event_id = event['pathParameters']['entity']
+    ordered_id = time_order_uuid(event_id)
 
     result = events.query(
-        IndexName= 'event-id',
-        ExpressionAttributeValues={":event_id": event_id, ":realm": realm},
-        KeyConditionExpression='EventId = :event_id and Realm = :realm'
+        ExpressionAttributeValues={":ordered_id": ordered_id, ":entity": entity},
+        KeyConditionExpression='OrderedId = :ordered_id and Entity = :entity'
     )
 
     response = {
-        "statusCode": 200,
+        "statusCode": result["ResponseMetadata"]["HTTPStatusCode"],
         "body": json.dumps(result['Items'])
     }
 
     return response
 
 def get_entity(event, context):
-    domain = event['pathParameters']['domain']
-    realm = event['pathParameters']['realm']
     entity = event['pathParameters']['entity']
 
-    sort_key= domain + "|" + entity
-
     result = events.query(
-        ExpressionAttributeValues={":sort_key": sort_key, ":realm": realm},
-        KeyConditionExpression='Realm = :realm and begins_with(RangeId, :sort_key)',
+        ExpressionAttributeValues={":entity": entity},
+        KeyConditionExpression='Entity = :entity',
     )
 
     response = {
@@ -80,18 +75,13 @@ def get_entity(event, context):
     return response
 
 def get_filtered_entity(event, context):
-    domain = event['pathParameters']['domain']
-    realm = event['pathParameters']['realm']
     entity = event['pathParameters']['entity']
     following = event['queryStringParameters']['following']
     filter_after = time_order_uuid(following)
 
-    sort_key= domain + "|" + entity
-
     result = events.query(
-        ExpressionAttributeValues={":sort_key": sort_key, ":realm": realm, ":filtered": filter_after},
-        KeyConditionExpression='Realm = :realm and begins_with(RangeId, :sort_key)',
-        FilterExpression='OrderedId > :filtered'
+        ExpressionAttributeValues={":entity": entity, ":filtered": filter_after},
+        KeyConditionExpression='Entity = :entity and OrderedId > :filtered'
     )
 
     response = {

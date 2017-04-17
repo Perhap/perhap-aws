@@ -1,4 +1,14 @@
-Setting up AWS CodePipeline
+
+
+
+
+
+
+
+
+
+
+<!-- Setting up AWS CodePipeline
 
 You can configure AWS CodePipeline to use GitHub as your source code.
 
@@ -28,4 +38,4 @@ Then-
     Something like This
       kinesis.put_record(StreamName="perhap",
         Data=json.dumps(item),
-        PartitionKey=str(item["domain"])
+        PartitionKey=str(item["domain"]) -->

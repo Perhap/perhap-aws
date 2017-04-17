@@ -26,7 +26,6 @@ def new_event(event, context):
     entity = event['pathParameters']['entity']
     event_type = event['pathParameters']['event-type']
     time_order_id= time_order_uuid(event_id)
-    range_id = domain + '|' + entity + '|' + time_order_id
     item= {
         'Realm': realm,
         'Domain': domain,
@@ -34,7 +33,6 @@ def new_event(event, context):
         'EventType': event_type,
         'EventId': event_id,
         'EventData': event_data,
-        'RangeId': range_id,
         'OrderedId': time_order_id
     }
 
@@ -48,9 +46,7 @@ def new_event(event, context):
 
 def bulk_post(event, context):
     events = json.loads(event['body'])['events']
-    print(events)
     for event in events:
-        print(event)
         event_data = event['event-data']
         event_id = event['event-id']
         domain = event['domain']
@@ -58,4 +54,21 @@ def bulk_post(event, context):
         entity = event['entity']
         event_type = event['event-type']
         time_order_id= time_order_uuid(event_id)
-        range_id = domain + '|' + entity + '|' + time_order_id
+
+        item= {
+            'Realm': realm,
+            'Domain': domain,
+            'Entity': entity,
+            'EventType': event_type,
+            'EventId': event_id,
+            'EventData': event_data,
+            'OrderedId': time_order_id
+        }
+
+        add_event= post_item(item, realm, domain, entity)
+
+    response = {
+        "statusCode": 202
+    }
+
+    return response
